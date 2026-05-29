@@ -1,0 +1,522 @@
+================================================================================
+                      WARNETPRO CLIENT - DOCUMENTATION
+================================================================================
+
+PROJECT NAME: WarnetPro Client GUI
+TECHNOLOGY: Python 3.7+ dengan GUI (Tkinter + PyTray)
+PURPOSE: Aplikasi client yang berjalan di setiap PC warnet untuk komunikasi 
+         dengan server WarnetPro
+
+================================================================================
+                                   OVERVIEW
+================================================================================
+
+WarnetPro Client adalah aplikasi Python yang berjalan di setiap PC warnet.
+Aplikasi ini:
+- Menghubungi server WarnetPro
+- Menerima perintah dari operator
+- Melakukan kontrol sesi member
+- Capture dan upload screenshot
+- Berjalan di background (system tray)
+
+================================================================================
+                                FITUR UTAMA
+================================================================================
+
+1. HEARTBEAT OTOMATIS
+   - Kirim status "online" ke server setiap 5 detik
+   - Server gunakan untuk monitor PC yang aktif
+   - Otomatis reconnect jika koneksi terputus
+
+2. STATUS SESI POLLING
+   - Ambil informasi sesi aktif dari server setiap 3 detik
+   - Display timer countdown sisa waktu sesi
+   - Update status real-time di aplikasi
+
+3. LOGIN/LOGOUT MEMBER
+   - Member login langsung dari PC client (GUI form)
+   - Kirim request ke server untuk mulai sesi
+   - Member logout untuk mengakhiri sesi
+   - Tampilkan confirmation dialog
+
+4. LOCK SCREEN FULLSCREEN
+   - Menerima perintah "lock" dari operator
+   - Tampilkan layar kunci hitam fullscreen
+   - Blok semua input keyboard/mouse
+   - Pesan "PC Terkunci Operator"
+   - Hanya bisa dibuka dengan perintah unlock dari operator
+
+5. SCREENSHOT CAPTURE & UPLOAD
+   - Capture screenshot layar
+   - Compress dengan kualitas 60% (bisa disesuaikan)
+   - Upload ke server otomatis
+   - Server simpan dan display di dashboard
+
+6. SYSTEM TRAY ICON
+   - Berjalan di background tanpa window besar
+   - Right-click tray icon untuk menu
+   - Quick access ke fungsi lock/unlock
+   - Hide/Show main window dari tray
+
+7. POLLING COMMAND
+   - Check command dari server setiap 2 detik
+   - Command: lock, unlock, screenshot, message, shutdown, restart
+   - Eksekusi command otomatis saat diterima
+   - Kirim status hasil eksekusi kembali ke server
+
+8. MESSAGE POPUP
+   - Terima pesan dari operator
+   - Display popup notification di PC
+   - Member bisa lihat informasi penting dari operator
+
+9. SHUTDOWN/RESTART PC
+   - Operator bisa matikan/restart PC dari dashboard
+   - Client eksekusi dengan delay 5 detik (agar sempat konfirmasi)
+   - Kirim notifikasi ke user sebelum shutdown
+
+================================================================================
+                         CARA KERJA APLIKASI
+================================================================================
+
+STARTUP SEQUENCE:
+1. Load config.ini file
+2. Validasi konfigurasi (check server URL, pc_name, etc)
+3. Setup logging system
+4. Get hardware info (MAC address, hostname, OS, CPU, RAM)
+5. Registrasi PC ke server (POST /api/client/register)
+6. Start background threads:
+   - Heartbeat thread (kirim status setiap 5 detik)
+   - Status polling thread (ambil session info setiap 3 detik)
+   - Command polling thread (ambil perintah setiap 2 detik)
+7. Setup system tray icon
+8. Show main GUI window
+
+OPERASI SEHARI-HARI:
+
+┌──────────────────────────────────────────────────────────┐
+│                    WARNETPRO CLIENT                      │
+│  PC Name: PC-01          Status: [ONLINE]                │
+│                                                           │
+│  Session Info:                                            │
+│  ├─ Member: John Doe                                     │
+│  ├─ Session ID: #12345                                  │
+│  ├─ Time Remaining: 01:45:23                            │
+│  ├─ Rate: Rp 5.000/jam                                  │
+│  └─ Total Cost: Rp 15.000                               │
+│                                                           │
+│  Quick Actions:                                          │
+│  ├─ [LOGIN] [LOGOUT]                                    │
+│  ├─ [LOCK]  [UNLOCK]                                    │
+│  └─ [CAPTURE SCREENSHOT]                                │
+│                                                           │
+│  Status Log:                                             │
+│  • 08:45:12 - Heartbeat sent (OK)                       │
+│  • 08:45:10 - Polling status updated                    │
+│  • 08:45:08 - Screenshot captured and uploaded          │
+│                                                           │
+│  [Settings] [Exit]                                      │
+└──────────────────────────────────────────────────────────┘
+
+THREAD COMMUNICATION:
+┌─────────────────────────────────────────────────────────┐
+│           Main Thread (GUI)                              │
+│  - Display UI elements                                  │
+│  - Handle user clicks/input                             │
+│  - Update display dari thread lain                      │
+└──────┬──────────────────────────────────────────────────┘
+       │
+       ├──────────────────────────┬─────────────────────────┬─────────────┐
+       │                          │                         │             │
+   ┌───▼──────┐        ┌────────▼──────┐       ┌──────────▼────┐  ┌─────▼──────┐
+   │ Heartbeat │        │   Polling     │       │ Command       │  │ Tray       │
+   │ Thread    │        │   Thread      │       │ Polling       │  │ Icon       │
+   │ (5s)      │        │   (3s)        │       │ Thread (2s)   │  │ Thread     │
+   │           │        │               │       │               │  │            │
+   │ Send:     │        │ GET status    │       │ GET commands  │  │ Handle     │
+   │ Heartbeat │        │ Update UI     │       │ Execute       │  │ Events     │
+   └───────────┘        │ Timer         │       │ Report result │  └────────────┘
+                        └───────────────┘       └───────────────┘
+
+COMMAND EXECUTION FLOW:
+
+┌────────────────┐
+│ Operator klik  │
+│ "Lock PC" di   │
+│ Dashboard      │
+└────────┬───────┘
+         │
+         ▼
+┌────────────────────────────────┐
+│ Server save command "lock"     │
+│ ke database (pc_id, command)   │
+└────────┬───────────────────────┘
+         │
+         ▼
+┌────────────────────────────────┐
+│ Client polling thread check    │
+│ API /api/client/commands       │
+│ every 2 seconds                │
+└────────┬───────────────────────┘
+         │
+         ├─ Command "lock" ditemukan
+         │
+         ▼
+┌────────────────────────────────┐
+│ Execute: tkinter fullscreen    │
+│ window dengan warna hitam,     │
+│ teks "PC Terkunci Operator"    │
+└────────┬───────────────────────┘
+         │
+         ▼
+┌────────────────────────────────┐
+│ Client POST status "locked"    │
+│ ke /api/client/commands/{id}   │
+└────────┬───────────────────────┘
+         │
+         ▼
+┌────────────────────────────────┐
+│ Dashboard terima status        │
+│ Display "PC-01: LOCKED"        │
+└────────────────────────────────┘
+
+================================================================================
+                          KONFIGURASI
+================================================================================
+
+File: config.ini (wajib dibuat sebelum jalankan client)
+
+[server]
+url = http://192.168.1.100:8000       ; IP dan port server WarnetPro
+pc_name = PC-01                       ; Nama PC (harus unik dan terdaftar)
+timeout = 10                          ; Request timeout (detik)
+
+[client]
+heartbeat_interval = 5                ; Kirim heartbeat setiap N detik
+status_poll_interval = 3              ; Polling sesi setiap N detik
+command_poll_interval = 2             ; Polling command setiap N detik
+screenshot_quality = 60               ; Kualitas screenshot (0-100)
+debug_mode = false                    ; Enable debug logging
+
+[gui]
+window_title = WarnetPro Client
+window_width = 600
+window_height = 500
+always_on_top = false
+start_minimized = true
+
+[tray]
+enable_tray = true                    ; Enable system tray
+show_on_startup = false               ; Show window saat startup
+
+================================================================================
+                          INSTALASI & SETUP
+================================================================================
+
+REQUIREMENT:
+- Windows 7 / Windows 10 / Windows 11
+- Python 3.7+
+- Internet connection (untuk koneksi ke server)
+
+LANGKAH INSTALASI:
+
+1. INSTALL PYTHON:
+   - Download Python dari https://www.python.org/downloads/
+   - Jalankan installer
+   - PENTING: Centang "Add Python to PATH"
+   - Klik Install
+
+2. DOWNLOAD WarnetPro Client:
+   - Extract folder WarnetProClient ke lokasi tetap
+   - Contoh: C:\WarnetPro\WarnetProClient
+
+3. BUAT config.ini:
+   - Copy template config.ini
+   - Sesuaikan IP server dan pc_name
+   - Contoh:
+     [server]
+     url = http://192.168.1.100:8000
+     pc_name = PC-01
+
+4. INSTALL DEPENDENCIES (PILIH SALAH SATU):
+
+   CARA A - Menggunakan start.bat (MUDAH):
+   - Klik dua kali file start.bat
+   - Otomatis install dependencies
+   - Otomatis jalankan aplikasi
+
+   CARA B - Manual:
+   - Buka Command Prompt (cmd)
+   - cd C:\WarnetPro\WarnetProClient
+   - pip install -r requirements.txt
+   - python warnetpro_client_gui.py
+
+5. SETUP AUTO-START saat Windows Startup:
+   - Buat shortcut file start.bat
+   - Tekan Win + R
+   - Ketik: shell:startup
+   - Tekan Enter
+   - Pindahkan shortcut ke folder Startup
+   - Sekarang client otomatis jalan saat Windows restart
+
+================================================================================
+                       STRUKTUR FILE & KODE
+================================================================================
+
+warnetpro_client_gui.py      - Main application file
+config.ini                   - Configuration file
+requirements.txt             - Python dependencies
+start.bat                    - Auto-installer batch file
+README.md                    - Dokumentasi
+
+STRUKTUR KODE:
+
+class WarnetProClient:
+  ├── __init__()                    - Constructor, load config
+  ├── load_config()                 - Load config.ini
+  ├── get_hardware_info()           - Get PC info (MAC, hostname, CPU, RAM)
+  ├── register_pc()                 - Register ke server
+  ├── start_threads()               - Start background threads
+  └── setup_ui()                    - Setup GUI window
+  
+  # Threads:
+  ├── heartbeat_loop()              - Send heartbeat setiap 5s
+  ├── status_poll_loop()            - Poll session status setiap 3s
+  ├── command_poll_loop()           - Poll commands setiap 2s
+  └── tray_icon_loop()              - Manage system tray icon
+  
+  # Commands:
+  ├── execute_lock()                - Lock screen fullscreen
+  ├── execute_unlock()              - Unlock screen
+  ├── execute_screenshot()          - Capture dan upload screenshot
+  ├── execute_message()             - Display pesan popup
+  ├── execute_shutdown()            - Shutdown PC dengan delay
+  └── execute_restart()             - Restart PC dengan delay
+  
+  # UI Methods:
+  ├── login_member()                - Show login form
+  ├── logout_member()               - Logout dan end session
+  ├── update_ui()                   - Update display
+  └── show_tray_menu()              - Tray context menu
+
+================================================================================
+                        DEPENDENCIES (requirements.txt)
+================================================================================
+
+requests==2.31.0              - HTTP client untuk komunikasi API
+Pillow==10.0.0                - Image processing untuk screenshot
+pystray==0.19.5               - System tray icon support
+
+Optional (untuk fitur tambahan):
+- pywin32                      - Windows API integration
+- pythonnet                    - .NET integration
+- pyinstaller                  - Compile ke exe standalone
+
+================================================================================
+                          API CALLS DARI CLIENT
+================================================================================
+
+1. REGISTER PC:
+   POST /api/client/register
+   Body: {
+     "pc_name": "PC-01",
+     "hostname": "DESKTOP-ABC123",
+     "mac_address": "AA:BB:CC:DD:EE:FF",
+     "os": "Windows 11",
+     "cpu": "Intel i5",
+     "ram": "8GB"
+   }
+   Response: { "id": 1, "status": "registered" }
+
+2. HEARTBEAT:
+   POST /api/client/heartbeat/{pc_id}
+   Body: { "timestamp": "2024-01-15 10:30:45" }
+   Response: { "status": "ok" }
+
+3. GET SESSION STATUS:
+   GET /api/client/session/{pc_id}
+   Response: {
+     "active": true,
+     "member": "John Doe",
+     "time_remaining": 3600,
+     "session_cost": 15000
+   }
+
+4. LOGIN MEMBER:
+   POST /api/session/login
+   Body: { 
+     "pc_id": 1,
+     "member_id": 5,
+     "duration_minutes": 60
+   }
+   Response: { "session_id": 123, "started_at": "2024-01-15 10:30:00" }
+
+5. LOGOUT MEMBER:
+   POST /api/session/logout/{session_id}
+   Response: { "status": "logged_out", "total_cost": 15000 }
+
+6. GET COMMANDS:
+   GET /api/client/commands/{pc_id}
+   Response: {
+     "commands": [
+       { "id": 1, "command": "lock" },
+       { "id": 2, "command": "screenshot" }
+     ]
+   }
+
+7. UPLOAD SCREENSHOT:
+   POST /api/client/screenshot
+   Body: { "pc_id": 1, "image_base64": "..." }
+   Response: { "url": "http://server/storage/screenshots/xxx.png" }
+
+================================================================================
+                          TROUBLESHOOTING
+================================================================================
+
+MASALAH 1: "ModuleNotFoundError: No module named 'requests'"
+SOLUSI:
+- Jalankan: pip install requests
+- Atau double-click start.bat (otomatis install semua)
+
+MASALAH 2: "Connection refused" - tidak bisa connect ke server
+SOLUSI:
+- Cek IP server di config.ini sudah benar
+- Ping server: ping 192.168.1.100
+- Pastikan server WarnetPro running
+- Cek firewall allow port 8000
+
+MASALAH 3: "PC name not found" - PC tidak terdaftar di server
+SOLUSI:
+- Verifikasi pc_name di config.ini
+- Register PC manual melalui dashboard
+- Atau jalankan registrasi ulang dari client
+
+MASALAH 4: Screenshot tidak muncul di dashboard
+SOLUSI:
+- Server harus jalankan: php artisan storage:link
+- Cek folder /storage/app/screenshots ada dan writable
+- Verifikasi screenshot terupload (check network tab)
+
+MASALAH 5: Aplikasi crash saat startup
+SOLUSI:
+- Cek error di console atau log file
+- Verifikasi config.ini format benar
+- Update Python ke versi terbaru
+- Reinstall requirements: pip install -r requirements.txt --force-reinstall
+
+MASALAH 6: Lock screen tidak muncul
+SOLUSI:
+- Update Pillow: pip install --upgrade Pillow
+- Cek Windows display settings (scaling)
+- Jalankan command polling loop dengan debug: debug_mode = true
+
+MASALAH 7: Auto-start tidak bekerja (startup folder)
+SOLUSI:
+- Buat shortcut dengan path absolut
+- Pastikan start.bat di lokasi tetap
+- Add Task Scheduler alternative:
+  * Windows Key + R → taskschd.msc
+  * Create New Task → point ke start.bat
+  * Set trigger: "At log on"
+
+================================================================================
+                          SECURITY NOTES
+================================================================================
+
+1. KOMUNIKASI SERVER:
+   - Gunakan HTTPS di production (konfigurasi .env server)
+   - Implementasikan API token authentication
+   - Validate SSL certificate
+
+2. SCREENSHOT:
+   - Screenshots hanya capture display, tidak data sensitif
+   - Simpan screenshot dengan encryption di server
+   - Implement retention policy (hapus otomatis setelah X hari)
+
+3. COMMAND EXECUTION:
+   - Jalankan client dengan user permission (non-admin jika bisa)
+   - Log semua command execution
+   - Implement command whitelist (hanya terima command tertentu)
+
+4. FILE PERMISSIONS:
+   - config.ini beri permission 600 (read-only)
+   - Jangan hardcode password di config
+   - Use environment variables untuk sensitive data
+
+================================================================================
+                       PERFORMANCE OPTIMIZATION
+================================================================================
+
+1. Reduce polling frequency jika server sibuk
+2. Compress screenshot dengan quality lebih rendah
+3. Implement exponential backoff untuk reconnect
+4. Cache session info locally
+5. Use threading.Event untuk stop graceful
+6. Implement rate limiting di API calls
+7. Monitor memory usage (screenshot capture bisa leak)
+
+================================================================================
+                          ADVANCED FEATURES
+================================================================================
+
+1. STATISTICS TRACKING:
+   - Track total online time
+   - Track number of sessions
+   - Calculate usage statistics
+   - Upload ke server untuk analytics
+
+2. OFFLINE MODE:
+   - Cache commands saat koneksi putus
+   - Execute saat reconnect
+   - Queue actions offline
+
+3. CUSTOM INTEGRATIONS:
+   - Integrate dengan member database
+   - Integrate dengan billing system
+   - Custom API endpoints
+
+4. MULTI-PC MONITORING:
+   - Satu server manage multiple PC
+   - Load balancing
+   - Failover support
+
+================================================================================
+                          DEVELOPMENT & DEBUG
+================================================================================
+
+ENABLE DEBUG MODE di config.ini:
+debug_mode = true
+
+Debug akan print:
+- Request/response details
+- Thread states
+- Command execution log
+- Network errors
+
+Gunakan logging:
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+Debug dengan Python REPL:
+python -i warnetpro_client_gui.py
+
+Jalankan dengan verbose output:
+python -u warnetpro_client_gui.py 2>&1 | more
+
+================================================================================
+                          LISENSI & INFO
+================================================================================
+
+WarnetPro Client v2.0
+Component dari WarnetPro System
+License: MIT
+
+Digunakan untuk:
+- Monitoring PC di warnet
+- Kontrol member sesi
+- Capture screen activity
+- Management operasional warnet
+
+Support: Hubungi administrator server
+
+================================================================================

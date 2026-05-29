@@ -1,0 +1,616 @@
+================================================================================
+                CARA MENGHUBUNGKAN WARNETPRO CLIENT KE SERVER
+================================================================================
+
+PANDUAN LENGKAP SETUP KOMUNIKASI CLIENT ↔ SERVER
+
+================================================================================
+                            OVERVIEW KONEKSI
+================================================================================
+
+Sistem WarnetPro bekerja dengan model Client-Server:
+
+┌──────────────────────────────────────────────────────┐
+│         WARNETPRO ARCHITECTURE                       │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│  SERVER (Laravel - http://192.168.1.100:8000)      │
+│  ├─ Dashboard (Admin & Operator)                    │
+│  ├─ Database (Users, PCs, Sessions)                │
+│  ├─ API Endpoints (untuk Client communication)     │
+│  └─ Command Storage                                │
+│                                                      │
+│          ↑                    ↓                       │
+│          │ (Heartbeat)        │ (Commands)          │
+│          │ (Poll Status)      │ (Screenshots)       │
+│          │ (Poll Commands)    │                     │
+│          │                                          │
+│  CLIENT 1: PC-01 (Python GUI)                      │
+│  CLIENT 2: PC-02 (Python GUI)                      │
+│  CLIENT 3: PC-03 (Python GUI)                      │
+│  ...                                                │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+
+STEP-BY-STEP SETUP:
+
+================================================================================
+                    LANGKAH 1: CARI IP ADDRESS SERVER
+================================================================================
+
+DARI KOMPUTER SERVER:
+
+STEP A: Buka Command Prompt
+  - Tekan Windows Key + R
+  - Ketik: cmd
+  - Enter
+
+STEP B: Cari IP address server
+  
+  Ketik perintah:
+  ipconfig
+  
+  Cari baris:
+  "IPv4 Address" under "Ethernet adapter" atau "Wireless adapter"
+  
+  Contoh output:
+  ─────────────────────────────────────────
+  Ethernet adapter Ethernet:
+    Connection-specific DNS Suffix: 
+    IPv4 Address.............: 192.168.1.100 ← INILAH IP SERVER!
+    Subnet Mask.............: 255.255.255.0
+    Default Gateway.........: 192.168.1.1
+  ─────────────────────────────────────────
+
+STEP C: CATAT IP ADDRESS
+
+  IP Server: 192.168.1.100
+  
+  (Akan digunakan di config.ini client)
+
+ALTERNATIVE - Cari IP lewat network:
+
+  Buka: Control Panel → Network & Internet → Network & Sharing Center
+  Klik: "Ethernet" atau "Wi-Fi"
+  Klik: Details
+  Cari: "IPv4 Address"
+
+================================================================================
+                    LANGKAH 2: PASTIKAN SERVER RUNNING
+================================================================================
+
+DI KOMPUTER SERVER:
+
+STEP 1: Terminal/Command Prompt
+  
+  cd C:\WarnetPro\WarnetPro
+
+STEP 2: Jalankan dev server
+  
+  composer run dev
+
+STEP 3: Tunggu sampai terlihat:
+  
+  [server] Local:   http://127.0.0.1:8000
+  [queue]  INFO Processing jobs
+  [vite]   VITE ready
+
+SERVER SEDANG RUNNING ✅
+
+================================================================================
+                    LANGKAH 3: KONFIGURASI CLIENT config.ini
+================================================================================
+
+DI KOMPUTER CLIENT (PC-01, PC-02, dll):
+
+STEP 1: Buka folder WarnetProClient
+  
+  C:\WarnetPro\WarnetProClient
+
+STEP 2: Cari file config.ini
+  
+  Jika tidak ada, buat file baru:
+  - Klik kanan di folder kosong
+  - New → Text Document
+  - Rename ke: config.ini
+  - Edit dengan Notepad
+
+STEP 3: Isi config.ini dengan template berikut:
+
+  ═════════════════════════════════════════
+  [server]
+  url = http://192.168.1.100:8000
+  pc_name = PC-01
+  timeout = 10
+
+  [client]
+  heartbeat_interval = 5
+  status_poll_interval = 3
+  command_poll_interval = 2
+  screenshot_quality = 60
+  debug_mode = false
+
+  [gui]
+  window_title = WarnetPro Client
+  window_width = 600
+  window_height = 500
+  
+  [tray]
+  enable_tray = true
+  start_minimized = true
+  ═════════════════════════════════════════
+
+STEP 4: CUSTOMIZE untuk PC ini:
+
+  PENTING - Ubah nilai berikut:
+  
+  ✓ url = http://[IP_SERVER]:8000
+    Ganti: 192.168.1.100 dengan IP server Anda
+    
+  ✓ pc_name = PC-01
+    Ganti ke nama PC ini:
+    PC-01, PC-02, PC-03, dst...
+    (HARUS UNIK untuk setiap PC!)
+
+CONTOH HASIL AKHIR:
+
+  [server]
+  url = http://192.168.1.100:8000      ← IP server
+  pc_name = PC-02                       ← Nama PC unik
+  timeout = 10
+
+  [client]
+  heartbeat_interval = 5
+  status_poll_interval = 3
+  command_poll_interval = 2
+  screenshot_quality = 60
+  debug_mode = false
+
+STEP 5: SAVE FILE
+  
+  Ctrl+S
+  File sudah tersimpan!
+
+================================================================================
+                    LANGKAH 4: MULAI CLIENT APPLICATION
+================================================================================
+
+DI KOMPUTER CLIENT:
+
+OPSI A - CARA MUDAH (Double-click start.bat):
+
+  STEP 1: Buka folder WarnetProClient
+  STEP 2: Double-click file "start.bat"
+  STEP 3: Tunggu ~ 10 detik
+  STEP 4: Window aplikasi akan muncul
+  STEP 5: Lihat status: [ONLINE] atau [CONNECTING]
+
+OPSI B - CARA MANUAL (Command Prompt):
+
+  STEP 1: Buka Command Prompt
+  STEP 2: Navigasi ke folder:
+    cd C:\WarnetPro\WarnetProClient
+  
+  STEP 3: Install dependencies (jika belum):
+    pip install -r requirements.txt
+  
+  STEP 4: Jalankan aplikasi:
+    python warnetpro_client_gui.py
+  
+  STEP 5: Tunggu hingga terlihat output:
+    
+    [2024-01-15 10:30:45] WarnetPro Client Starting...
+    [2024-01-15 10:30:46] Loading config.ini from: ...
+    [2024-01-15 10:30:47] PC Name: PC-01
+    [2024-01-15 10:30:48] Connecting to server: http://192.168.1.100:8000
+    [2024-01-15 10:30:49] ✓ Connected!
+    [2024-01-15 10:30:50] ✓ PC Registered
+    [2024-01-15 10:30:50] GUI opened
+  
+  STEP 6: Aplikasi READY! ✅
+
+================================================================================
+                    LANGKAH 5: VERIFIKASI KONEKSI
+================================================================================
+
+VERIFIKASI DARI CLIENT:
+
+STEP 1: Lihat GUI aplikasi
+
+  Harusnya tampil:
+  ┌──────────────────────────────────┐
+  │ WarnetPro Client GUI             │
+  │                                  │
+  │ PC: PC-01  Status: ✓ ONLINE      │
+  │            (warna hijau)         │
+  │                                  │
+  │ [Login] [Logout] [Lock] [Unlock]│
+  │ [Screenshot]                     │
+  │                                  │
+  │ Status Log:                      │
+  │ • Connected to server OK         │
+  │ • Heartbeat sent successfully    │
+  │ • Ready for commands             │
+  └──────────────────────────────────┘
+
+STEP 2: Lihat console output
+
+  Pastikan ada:
+  ✓ "Connected to server"
+  ✓ "PC Registered"
+  ✓ "Heartbeat sent successfully"
+  ✓ "No error messages"
+
+VERIFIKASI DARI SERVER (Dashboard):
+
+STEP 1: Buka browser di server
+  http://localhost:8000
+
+STEP 2: Login dengan:
+  admin@warnet.com / password
+
+STEP 3: Buka menu: PC Management atau PC List
+
+STEP 4: Lihat PC List
+
+  Harusnya muncul:
+  ┌──────────────────────────────────────┐
+  │ PC List                              │
+  ├────────────────────────────────────┬─┤
+  │ PC Name  │ Status  │ IP Address     │ │
+  ├──────────┼─────────┼────────────────┤ │
+  │ PC-01    │ ONLINE  │ 192.168.1.101  │ │ ← MUNCUL!
+  │ PC-02    │ OFFLINE │ -              │ │
+  │ PC-03    │ OFFLINE │ -              │ │
+  └──────────┴─────────┴────────────────┴─┘
+
+PC SUDAH CONNECTED ✅
+
+================================================================================
+                    LANGKAH 6: TEST KOMUNIKASI
+================================================================================
+
+TEST 1: HEARTBEAT
+
+  Di console client, harusnya terlihat setiap 5 detik:
+  [10:30:50] Heartbeat sent successfully
+  [10:30:55] Heartbeat sent successfully
+  [10:30:60] Heartbeat sent successfully
+  ...
+  
+  Jika heartbeat terus dikirim → koneksi BAIK ✅
+
+TEST 2: SCREENSHOT COMMAND
+
+  Di dashboard server:
+  - Klik PC-01
+  - Klik "Capture Screenshot" atau "Lihat Layar"
+  
+  Di client console:
+  [10:31:20] Command received: screenshot
+  [10:31:21] Capturing screenshot...
+  [10:31:22] Screenshot captured: 800x600
+  [10:31:23] Uploading to server...
+  [10:31:24] ✓ Screenshot uploaded successfully
+  
+  Di dashboard:
+  - Screenshot akan muncul dalam 3-5 detik
+  - Operator bisa lihat layar PC-01
+
+TEST 3: LOCK COMMAND
+
+  Di dashboard server:
+  - Klik PC-01
+  - Klik "Lock" atau "Kunci PC"
+  
+  Di client:
+  - Layar akan langsung gelap penuh
+  - Text: "PC Terkunci Operator"
+  - Semua input (mouse, keyboard) diblok
+  
+  Di dashboard:
+  - Status berubah ke "LOCKED"
+  
+  Operator klik "Unlock":
+  - Screen normal lagi
+  - User bisa pakai PC
+
+SEMUA TEST PASSED ✅
+
+================================================================================
+                    LANGKAH 7: SETUP MULTIPLE CLIENTS
+================================================================================
+
+UNTUK MENAMBAH CLIENT BARU (PC-02, PC-03, dll):
+
+ULANGI untuk setiap PC:
+
+STEP 1: Copy folder WarnetProClient ke PC baru
+  - Atau download dari server
+  - Atau extract file WarnetProClient.zip
+
+STEP 2: Buat/Edit config.ini
+
+  [server]
+  url = http://192.168.1.100:8000        ← SAMA untuk semua PC
+  pc_name = PC-02                        ← BERBEDA untuk setiap PC
+  
+  (PC-03, PC-04, PC-05, dst...)
+
+STEP 3: Jalankan client
+
+  start.bat
+  
+  atau
+  
+  python warnetpro_client_gui.py
+
+STEP 4: Verifikasi di dashboard
+
+  Klik: PC Management
+  Cek: PC-02 muncul dengan status ONLINE
+
+REPEAT untuk semua PC yang ada di warnet:
+
+  PC-01 → PC-02 → PC-03 → PC-04 → ... → PC-10
+
+SEMUA PC TERDAFTAR DI DASHBOARD ✅
+
+================================================================================
+                    KONFIGURASI LANJUT
+================================================================================
+
+JIKA INGIN CUSTOMIZE, EDIT config.ini:
+
+HEARTBEAT INTERVAL:
+  heartbeat_interval = 5     (default: kirim status setiap 5 detik)
+  heartbeat_interval = 10    (lebih jarang, hemat bandwidth)
+  heartbeat_interval = 2     (lebih sering, responsif)
+
+STATUS POLL INTERVAL:
+  status_poll_interval = 3   (default: polling status setiap 3 detik)
+  Ubah ke lebih besar jika ingin hemat resource
+
+COMMAND POLL INTERVAL:
+  command_poll_interval = 2  (default: polling command setiap 2 detik)
+  Ubah ke lebih kecil untuk response lebih cepat
+
+SCREENSHOT QUALITY:
+  screenshot_quality = 60    (default: kompres 60%)
+  screenshot_quality = 90    (lebih bagus tapi file besar)
+  screenshot_quality = 30    (lebih kecil tapi jelek)
+
+DEBUG MODE:
+  debug_mode = false         (default: normal)
+  debug_mode = true          (lihat detail log untuk debugging)
+
+================================================================================
+                    NETWORK DIAGRAM
+================================================================================
+
+CONTOH SETUP WARNET DENGAN 5 PC:
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     WARNET NETWORK                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Internet ←→ Router (192.168.1.1)                              │
+│               │                                                │
+│               ├─ SERVER (192.168.1.100)                        │
+│               │  ├─ Dashboard: http://192.168.1.100:8000       │
+│               │  ├─ Admin Login                                │
+│               │  └─ API Endpoints                              │
+│               │                                                │
+│               ├─ CLIENT PC-01 (192.168.1.101)                  │
+│               │  ├─ config.ini:                                │
+│               │  │  url = http://192.168.1.100:8000            │
+│               │  │  pc_name = PC-01                            │
+│               │  └─ Running: warnetpro_client_gui.py           │
+│               │                                                │
+│               ├─ CLIENT PC-02 (192.168.1.102)                  │
+│               │  ├─ config.ini: pc_name = PC-02               │
+│               │  └─ Running: warnetpro_client_gui.py           │
+│               │                                                │
+│               ├─ CLIENT PC-03 (192.168.1.103)                  │
+│               │  ├─ config.ini: pc_name = PC-03               │
+│               │  └─ Running: warnetpro_client_gui.py           │
+│               │                                                │
+│               ├─ CLIENT PC-04 (192.168.1.104)                  │
+│               │  ├─ config.ini: pc_name = PC-04               │
+│               │  └─ Running: warnetpro_client_gui.py           │
+│               │                                                │
+│               └─ CLIENT PC-05 (192.168.1.105)                  │
+│                  ├─ config.ini: pc_name = PC-05               │
+│                  └─ Running: warnetpro_client_gui.py           │
+│                                                                │
+└─────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    TROUBLESHOOTING KONEKSI
+================================================================================
+
+MASALAH #1: Client mengatakan "Cannot connect to server"
+
+PENYEBAB:
+  - IP server salah di config.ini
+  - Server tidak running
+  - Firewall blocking port 8000
+  - Network tidak terhubung
+
+SOLUSI:
+  1. Cek IP server: ipconfig
+  2. Update config.ini dengan IP benar
+  3. Pastikan server running (php artisan serve)
+  4. Test ping: ping 192.168.1.100
+  5. Check firewall: allow port 8000
+
+─────────────────────────────────────────────────────────────────
+
+MASALAH #2: PC terdaftar tapi status OFFLINE
+
+PENYEBAB:
+  - Client berhenti
+  - Koneksi terputus
+  - Heartbeat timeout
+
+SOLUSI:
+  1. Restart client application
+  2. Check network connection
+  3. Cek firewall port 8000
+  4. Increase heartbeat_interval di config.ini
+
+─────────────────────────────────────────────────────────────────
+
+MASALAH #3: Screenshot tidak terupload
+
+PENYEBAB:
+  - Storage folder tidak ada permission
+  - Koneksi upload terputus
+  - File path salah
+
+SOLUSI:
+  1. Di server: php artisan storage:link
+  2. Restart client
+  3. Try screenshot lagi
+  4. Check folder: /storage/app/screenshots
+
+─────────────────────────────────────────────────────────────────
+
+MASALAH #4: Lock command tidak bekerja
+
+PENYEBAB:
+  - Command tidak diterima client
+  - Polling command tidak berjalan
+  - Python display issue
+
+SOLUSI:
+  1. Check console client untuk error
+  2. Reduce command_poll_interval
+  3. Restart client
+  4. Check Pillow library: pip install --upgrade Pillow
+
+─────────────────────────────────────────────────────────────────
+
+MASALAH #5: PC name duplicate atau tidak terdaftar
+
+PENYEBAB:
+  - config.ini pc_name sama dengan PC lain
+  - PC belum register ke server
+  - Database error
+
+SOLUSI:
+  1. Cek: setiap PC harus pc_name UNIK
+  2. Restart client untuk re-register
+  3. Manual register di dashboard admin
+  4. Check database: php artisan tinker → Computer::all();
+
+================================================================================
+                    MONITORING DAN MAINTENANCE
+================================================================================
+
+DAILY MONITORING:
+
+✓ Cek dashboard PC List
+  - Semua PC status ONLINE?
+  - Ada yang OFFLINE?
+  
+✓ Check active sessions
+  - Berapa member sedang bermain?
+  - Timer countdown normal?
+
+✓ Monitor logs
+  - Ada error di storage/logs?
+  - Client crash atau disconnect?
+
+WEEKLY MAINTENANCE:
+
+✓ Backup database
+  - Copy: database/database.sqlite
+
+✓ Check disk space
+  - /storage folder banyak screenshot?
+  - Hapus screenshot lama
+
+✓ Update dependencies
+  - composer update
+  - pip install --upgrade -r requirements.txt
+
+✓ Restart server
+  - Ctrl+C → composer run dev
+  - Fresh start untuk clear memory leak
+
+MONTHLY TASKS:
+
+✓ Review user sessions
+✓ Cleanup old data
+✓ Performance optimization
+✓ Security audit
+
+================================================================================
+                    BEST PRACTICES
+================================================================================
+
+✓ ALWAYS verify IP address sebelum config
+  Salah IP = koneksi tidak bisa
+
+✓ MAKE SURE server running sebelum jalankan client
+  Client akan error jika server offline
+
+✓ USE UNIQUE pc_name untuk setiap PC
+  Jangan duplicate nama, akan conflict
+
+✓ CONFIGURE once, backup config.ini
+  Jika PC setup sama, bisa copy config
+
+✓ RESTART client jika ada masalah
+  Stop → close → start lagi
+
+✓ MONITOR console output di development
+  Lihat error/warning di console
+
+✓ KEEP firewall rules untuk allow port 8000
+  Jangan block port, koneksi mati
+
+================================================================================
+                    QUICK REFERENCE
+================================================================================
+
+SETUP CHECKLIST:
+
+☐ Cari IP server: ipconfig
+☐ Pastikan server running: composer run dev
+☐ Buat/edit config.ini client
+☐ Isi: url = http://[IP]:8000
+☐ Isi: pc_name = PC-01 (unik!)
+☐ Save config.ini
+☐ Jalankan client: start.bat atau python warnetpro_client_gui.py
+☐ Lihat status: [ONLINE]
+☐ Verifikasi di dashboard: PC muncul di list
+☐ Test command: lock, screenshot, unlock
+☐ DONE! ✅
+
+UNTUK PC TAMBAHAN:
+
+☐ Copy WarnetProClient folder ke PC baru
+☐ Edit config.ini: ubah pc_name jadi PC-02, PC-03, dst
+☐ Jalankan client
+☐ Verifikasi di dashboard
+
+================================================================================
+                    NEXT STEPS
+================================================================================
+
+1. ✅ Setup config.ini di client
+2. ✅ Jalankan client application
+3. ✅ Verifikasi status ONLINE di dashboard
+4. ✅ Test lock/unlock command
+5. ✅ Test screenshot capture
+6. ✅ Add more clients (PC-02, PC-03, dst)
+7. ✅ Test member login/logout di client
+8. ✅ Test session timer di client
+9. ✅ Monitor dari dashboard
+10. ✅ Go LIVE! 🚀
+
+SELAMAT! Warnet sudah siap dioperasionalkan! 🎉
+
+================================================================================

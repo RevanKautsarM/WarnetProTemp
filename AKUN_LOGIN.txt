@@ -1,0 +1,400 @@
+================================================================================
+                    AKUN LOGIN WARNETPRO DASHBOARD
+================================================================================
+
+SETELAH SERVER BERJALAN DAN DATABASE SUDAH TERMIGRASI,
+ADA 2 AKUN DEFAULT YANG TERSEDIA:
+
+================================================================================
+                        AKUN #1: ADMINISTRATOR
+================================================================================
+
+Email:    admin@warnet.com
+Password: password
+
+Role:     Admin (Akses penuh ke semua fitur)
+
+Fitur yang bisa diakses:
+  ✓ Dashboard admin
+  ✓ Manajemen user/operator
+  ✓ Manajemen PC
+  ✓ Manajemen member
+  ✓ Laporan & analytics
+  ✓ Sistem settings
+  ✓ Manajemen role & permission
+
+================================================================================
+                        AKUN #2: OPERATOR
+================================================================================
+
+Email:    operator@warnet.com
+Password: password
+
+Role:     Operator (Kontrol PC dan monitoring)
+
+Fitur yang bisa diakses:
+  ✓ Dashboard operator
+  ✓ List PC warnet
+  ✓ Monitoring sesi aktif
+  ✓ Lock/Unlock PC
+  ✓ Capture screenshot
+  ✓ Shutdown/Restart PC
+  ✓ Send message ke PC
+  ✓ Manajemen member login/logout
+
+================================================================================
+                          CARA LOGIN
+================================================================================
+
+STEP 1: Pastikan server sudah running
+  
+  cd C:\WarnetPro\WarnetPro
+  composer run dev
+  
+  Tunggu sampai terlihat: "Server running on http://127.0.0.1:8000"
+
+STEP 2: Buka browser
+  
+  http://localhost:8000
+  
+  (Atau http://192.168.1.100:8000 dari PC lain)
+
+STEP 3: Klik Login atau ke page /login
+  
+  http://localhost:8000/login
+
+STEP 4: Isi form login
+  
+  Email:    admin@warnet.com
+  Password: password
+  
+  (Atau gunakan operator@warnet.com)
+
+STEP 5: Klik tombol Login
+  
+  Jika berhasil, akan redirect ke dashboard ✅
+
+================================================================================
+                        FIRST TIME SETUP
+================================================================================
+
+SEBELUM BISA LOGIN, PASTIKAN SUDAH RUN SEEDER:
+
+1. Database belum punya data:
+   cd C:\WarnetPro\WarnetPro
+   php artisan migrate
+   php artisan db:seed
+   
+   Atau fresh install:
+   php artisan migrate:fresh --seed
+
+2. Command db:seed akan membuat:
+   ✓ User Admin (admin@warnet.com / password)
+   ✓ User Operator (operator@warnet.com / password)
+   ✓ 10 PC dummy (PC-01 sampai PC-10)
+
+3. Kalau hanya jalankan composer run setup, seeder TIDAK otomatis dijalankan
+   Jalankan manual: php artisan db:seed
+
+================================================================================
+                      JIKA AKUN SUDAH TERDAFTAR
+================================================================================
+
+Jika database sudah ada akun, cek akun dengan TINKER:
+
+cd C:\WarnetPro\WarnetPro
+php artisan tinker
+
+Kemudian jalankan:
+>>> App\Models\User::all();
+
+Output akan terlihat:
+[
+  {
+    "id": 1,
+    "name": "Administrator",
+    "email": "admin@warnet.com",
+    "role": "admin",
+  },
+  {
+    "id": 2,
+    "name": "Operator",
+    "email": "operator@warnet.com",
+    "role": "operator",
+  }
+]
+
+Cek email yang tersedia, itu bisa digunakan untuk login.
+
+================================================================================
+                      LUPA PASSWORD
+================================================================================
+
+JIKA LUPA PASSWORD:
+
+OPSI 1: Reset via Database (Direct)
+  
+  cd C:\WarnetPro\WarnetPro
+  php artisan tinker
+  
+  >>> $user = App\Models\User::where('email', 'admin@warnet.com')->first();
+  >>> $user->update(['password' => bcrypt('newpassword123')]);
+  >>> true
+  
+  Sekarang password baru: newpassword123
+
+OPSI 2: Gunakan "Forgot Password" di Login Page
+  
+  1. Di halaman login, klik "Forgot your password?"
+  2. Masukkan email: admin@warnet.com
+  3. Cek email untuk reset link
+  4. Set password baru
+
+OPSI 3: Buat User Baru
+  
+  php artisan tinker
+  
+  >>> App\Models\User::create([
+  ...   'name' => 'Test User',
+  ...   'email' => 'test@example.com',
+  ...   'password' => bcrypt('testpass123'),
+  ...   'role' => 'admin',
+  ... ]);
+
+================================================================================
+                      UBAH PASSWORD
+================================================================================
+
+SETELAH LOGIN, UBAH PASSWORD:
+
+1. Klik avatar/profile di corner kanan atas
+2. Pilih "Profile" atau "Account Settings"
+3. Klik "Change Password" atau "Security"
+4. Isi:
+   - Current Password: password
+   - New Password: [password baru]
+   - Confirm Password: [konfirmasi]
+5. Klik Save/Update
+
+Password sekarang sudah berubah ✅
+
+================================================================================
+                      MANAJEMEN USER LANJUT
+================================================================================
+
+BUAT USER BARU (ADMIN ONLY):
+
+Di dashboard → Admin Panel → User Management:
+
+1. Klik "Add New User" atau "Create User"
+2. Isi form:
+   - Name: Nama user
+   - Email: Email unik
+   - Password: Password awal
+   - Role: admin / operator / member
+3. Klik Create
+
+USER AKAN BISA LOGIN dengan email dan password yang dibuat.
+
+EDIT USER:
+
+Di User List → Klik user → Edit:
+
+- Update nama, email
+- Change password
+- Update role
+- Enable/Disable user
+
+DELETE USER:
+
+Di User List → Klik user → Delete:
+
+- Konfirmasi delete
+- User dan data terhapus
+
+================================================================================
+                      ROLE & PERMISSION
+================================================================================
+
+ADMIN (admin@warnet.com):
+  ✓ Full akses semua menu
+  ✓ Manajemen user
+  ✓ Manajemen sistem
+  ✓ View reports
+  ✓ Konfigurasi settings
+
+OPERATOR (operator@warnet.com):
+  ✓ Dashboard operator
+  ✓ Monitor PC online/offline
+  ✓ Monitor sesi member
+  ✓ Lock/unlock PC
+  ✓ Capture screenshot
+  ✓ Send command
+  ✓ TIDAK bisa: delete data, ubah settings, manajemen user
+
+MEMBER (jika ada):
+  ✓ View profile
+  ✓ Lihat history sesi
+  ✓ TIDAK bisa: akses dashboard, kontrol PC
+
+================================================================================
+                      TROUBLESHOOTING LOGIN
+================================================================================
+
+ERROR 1: "Invalid credentials"
+SOLUSI:
+  - Pastikan email benar: admin@warnet.com
+  - Pastikan password benar: password
+  - Cek capslock
+  - Try reset password
+
+ERROR 2: "Page not found" di /login
+SOLUSI:
+  - Pastikan server running
+  - Cek URL benar: http://localhost:8000/login
+  - Clear browser cache (Ctrl+Shift+Delete)
+
+ERROR 3: "SQLSTATE error" atau "Database connection refused"
+SOLUSI:
+  - Pastikan migration sudah dijalankan: php artisan migrate
+  - Pastikan database file ada: database/database.sqlite
+  - Check .env database config
+
+ERROR 4: "419 Page Expired" setelah submit login
+SOLUSI:
+  - Clear cookies browser
+  - Jalankan: php artisan config:clear
+  - Cek .env APP_KEY ada
+  - Jalankan: php artisan key:generate
+
+ERROR 5: "Too many login attempts"
+SOLUSI:
+  - Tunggu 5-10 menit sebelum coba lagi
+  - Atau reset cache:
+    php artisan cache:clear
+    php artisan config:clear
+
+================================================================================
+                      DASHBOARD OVERVIEW
+================================================================================
+
+SETELAH LOGIN BERHASIL, AKAN TERLIHAT:
+
+ADMIN DASHBOARD:
+  ┌─────────────────────────────────────────────────────────┐
+  │ Welcome, Administrator!                                 │
+  ├─────────────────────────────────────────────────────────┤
+  │ Sidebar Menu:                                           │
+  │  ├─ Dashboard         - Main overview                   │
+  │  ├─ PC Management     - List PC, status, detail         │
+  │  ├─ Member Management - Create, edit, delete member    │
+  │  ├─ Session          - Monitor active sessions         │
+  │  ├─ Users            - Manage operators & admins       │
+  │  ├─ Reports          - Statistics & analytics          │
+  │  ├─ Settings         - System configuration            │
+  │  └─ Logout           - Exit dashboard                  │
+  │                                                         │
+  │ Main Panel:                                             │
+  │  ├─ Total PC:        10 (8 Online, 2 Offline)         │
+  │  ├─ Active Sessions: 3 sessions                        │
+  │  ├─ Members:         25 total                          │
+  │  └─ Revenue:         Rp 125.000 (today)               │
+  └─────────────────────────────────────────────────────────┘
+
+OPERATOR DASHBOARD:
+  ┌─────────────────────────────────────────────────────────┐
+  │ Welcome, Operator!                                      │
+  ├─────────────────────────────────────────────────────────┤
+  │ Sidebar Menu:                                           │
+  │  ├─ Dashboard         - PC status overview              │
+  │  ├─ PC List          - All PC with actions             │
+  │  ├─ Session Monitor   - Active sessions                │
+  │  ├─ Commands         - Send command to PC              │
+  │  ├─ Screenshots      - View captured screens           │
+  │  └─ Logout           - Exit dashboard                  │
+  │                                                         │
+  │ Main Panel:                                             │
+  │  ├─ PC Status:       PC-01 [ONLINE] PC-02 [OFFLINE]   │
+  │  ├─ Active Sessions: 2 member sedang bermain           │
+  │  ├─ Quick Actions:   [Lock] [Screenshot] [Message]    │
+  │  └─ Recent Logs:     History command 10 entries       │
+  └─────────────────────────────────────────────────────────┘
+
+================================================================================
+                      CONTOH WORKFLOW
+================================================================================
+
+SKENARIO: Member ingin bermain di warnet
+
+1. ADMIN/OPERATOR:
+   - Login ke dashboard
+   - Buka "Member Management"
+   - Cari/tambah member
+   - Lihat available PC
+
+2. OPERATOR:
+   - Buka "Session"
+   - Klik "New Session"
+   - Pilih: Member, PC, Duration
+   - Klik "Start Session"
+   - Session timer mulai berjalan
+
+3. CLIENT PC:
+   - warnetpro_client_gui.py auto-polling
+   - Terima session info
+   - Display timer countdown
+   - Member bisa bermain
+
+4. OPERATOR MONITORING:
+   - Lihat session aktif
+   - Lihat screenshot anytime
+   - Lock jika ada masalah
+   - Monitor sisa waktu
+
+5. SELESAI:
+   - Timer habis → auto logout
+   - Atau operator klik "End Session"
+   - Bayar sesuai durasi
+   - Member logout
+
+================================================================================
+                      IMPORTANT NOTES
+================================================================================
+
+⚠️ PASSWORD DEFAULT ("password") SANGAT SEDERHANA
+   Untuk production, UBAH PASSWORD ke yang lebih aman!
+
+⚠️ JANGAN SHARE AKUN ADMIN
+   Hanya untuk administrator / owner
+   Gunakan akun Operator untuk staff
+
+⚠️ DATABASE RESET = DATA HILANG
+   Jika jalankan `php artisan migrate:fresh --seed`
+   Semua data sebelumnya akan terhapus!
+   Backup database sebelum operasi besar!
+
+✓ RESET DATABASE DEVELOPMENT:
+   php artisan migrate:fresh --seed
+   → Kembali ke state baru dengan default users
+
+✓ BACKUP DATABASE:
+   Copy file: database/database.sqlite
+   Simpan di lokasi aman
+
+================================================================================
+                      NEXT STEPS
+================================================================================
+
+1. ✅ Pastikan server running: composer run dev
+2. ✅ Jalankan migration & seeder: php artisan migrate && php artisan db:seed
+3. ✅ Buka browser: http://localhost:8000/login
+4. ✅ Login dengan: admin@warnet.com / password
+5. ✅ Lihat dashboard
+6. ✅ Start WarnetPro Client di PC-01
+7. ✅ Monitor PC di dashboard
+8. ✅ Coba lock/unlock PC dari dashboard
+9. ✅ Coba capture screenshot
+
+SELAMAT! WarnetPro sudah berjalan 🚀
+
+================================================================================

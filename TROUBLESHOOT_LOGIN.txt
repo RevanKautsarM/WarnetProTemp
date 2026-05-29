@@ -1,0 +1,424 @@
+================================================================================
+                    TROUBLESHOOTING: LOGIN TIDAK BISA
+================================================================================
+
+ERROR: "These credentials do not match our records"
+
+PENYEBAB UMUM:
+1. Database belum punya user default
+2. Nama user/password salah
+3. Cache tidak di-clear
+4. Session error
+
+SOLUSI LENGKAP:
+
+================================================================================
+                        SOLUSI #1: RESET DATABASE
+================================================================================
+
+STEP 1: Buka Command Prompt di folder WarnetPro
+
+  cd C:\WarnetPro\WarnetPro
+
+STEP 2: Fresh database dan create default users
+
+  php artisan migrate:fresh --seed
+
+  Output akan terlihat:
+  ✓ Dropped all tables successfully
+  ✓ Running migrations
+  ✓ Database: Database\Seeders\DatabaseSeeder
+  ✓ Seeded database successfully
+
+STEP 3: Clear cache
+
+  php artisan cache:clear
+  php artisan config:clear
+
+STEP 4: Logout browser (close semua tab dengan localhost:8000)
+
+  Ctrl+W (close tab)
+
+STEP 5: Buka browser baru dan login
+
+  http://localhost:8000/login
+  
+  Email:    admin@warnet.com
+  Password: password
+
+SELESAI! ✅
+
+================================================================================
+                        SOLUSI #2: BUAT USER MANUAL
+================================================================================
+
+JIKA ANDA TIDAK INGIN RESET DATABASE:
+
+STEP 1: Buka artisan tinker
+
+  cd C:\WarnetPro\WarnetPro
+  php artisan tinker
+
+STEP 2: Buat admin user baru
+
+  >>> App\Models\User::create([
+  ...   'name' => 'Administrator',
+  ...   'email' => 'admin@warnet.com',
+  ...   'password' => bcrypt('password'),
+  ...   'role' => 'admin',
+  ... ]);
+
+  Output: Direturn object User yang baru
+
+STEP 3: Buat operator user
+
+  >>> App\Models\User::create([
+  ...   'name' => 'Operator',
+  ...   'email' => 'operator@warnet.com',
+  ...   'password' => bcrypt('password'),
+  ...   'role' => 'operator',
+  ... ]);
+
+STEP 4: Exit tinker
+
+  >>> exit
+
+STEP 5: Clear cache dan logout
+
+  php artisan cache:clear
+  php artisan config:clear
+
+STEP 6: Login
+
+  http://localhost:8000/login
+  Email: admin@warnet.com
+  Password: password
+
+SELESAI! ✅
+
+================================================================================
+                        SOLUSI #3: CHECK DATABASE
+================================================================================
+
+CEK APAKAH USER SUDAH ADA:
+
+STEP 1: Buka tinker
+
+  php artisan tinker
+
+STEP 2: Query semua user
+
+  >>> App\Models\User::all();
+
+STEP 3: Lihat hasil
+
+  Jika kosong (array kosong []):
+    Database belum punya user, lanjut ke SOLUSI #1 atau #2
+
+  Jika ada user:
+    Lihat email yang ada
+    Gunakan email itu untuk login
+
+STEP 4: CEK PASSWORD USER TERTENTU
+
+  >>> $user = App\Models\User::where('email', 'admin@warnet.com')->first();
+  >>> $user;
+
+  Jika null:
+    User tidak ada, buat dengan SOLUSI #2
+
+  Jika ada object:
+    User sudah ada, coba login lagi
+
+STEP 5: Exit
+
+  >>> exit
+
+================================================================================
+                        SOLUSI #4: PERUBAHAN PASSWORD
+================================================================================
+
+JIKA INGIN GANTI PASSWORD USER YANG ADA:
+
+STEP 1: Buka tinker
+
+  php artisan tinker
+
+STEP 2: Update password
+
+  >>> $user = App\Models\User::where('email', 'admin@warnet.com')->first();
+  >>> $user->update(['password' => bcrypt('newpassword')]);
+  >>> true
+
+STEP 3: Exit
+
+  >>> exit
+
+STEP 4: Login dengan password baru
+
+  Email: admin@warnet.com
+  Password: newpassword
+
+SELESAI! ✅
+
+================================================================================
+                        SOLUSI #5: MIGRATION ERROR
+================================================================================
+
+JIKA MIGRATION BELUM BERJALAN SAMA SEKALI:
+
+STEP 1: Cek status migration
+
+  php artisan migrate:status
+
+  Output akan terlihat:
+  Batch | Migration | Batch | Status
+  ====================================
+  0     | create_users_table | Status
+  ...
+
+  Jika semua "Ran", sudah selesai.
+  Jika belum ada satupun "Ran", jalankan:
+
+STEP 2: Jalankan migration
+
+  php artisan migrate
+
+  Output:
+  ✓ Migrating: 2024_01_15_000000_create_users_table
+  ✓ Migrating: 2024_01_15_000001_create_posts_table
+  ✓ ...
+  
+STEP 3: Jalankan seeder
+
+  php artisan db:seed
+
+STEP 4: Cek user
+
+  php artisan tinker
+  >>> App\Models\User::count();
+
+  Jika output > 0, berhasil!
+
+================================================================================
+                        SOLUSI #6: BROWSER CACHE
+================================================================================
+
+CEK BROWSER CACHE & SESSION:
+
+STEP 1: Clear browser cache
+  
+  Chrome: Ctrl + Shift + Delete
+  Firefox: Ctrl + Shift + Delete
+  Edge: Ctrl + Shift + Delete
+  
+  Pilih:
+  ✓ Cookies and other site data
+  ✓ Cached images and files
+  
+  Klik Clear data
+
+STEP 2: Close browser completely
+
+  Close semua tab dan window browser
+
+STEP 3: Clear Laravel cache
+
+  php artisan cache:clear
+  php artisan config:clear
+  php artisan route:cache
+
+STEP 4: Clear PHP session
+
+  Cari folder: C:\WarnetPro\WarnetPro\storage\framework\sessions
+  Delete semua file di folder session
+
+STEP 5: Buka browser baru
+
+  http://localhost:8000/login
+
+================================================================================
+                        SOLUSI #7: CHECK SERVER RUNNING
+================================================================================
+
+PASTIKAN SERVER SUDAH RUNNING:
+
+STEP 1: Cek di command prompt
+
+  Seharusnya muncul:
+  [server] Local:   http://127.0.0.1:8000
+  [queue]  Processing jobs
+  [vite]   VITE ready
+
+  Jika tidak ada, jalankan:
+  composer run dev
+
+STEP 2: Test server dengan curl
+
+  curl http://localhost:8000
+
+  Jika return HTML, server running ✅
+
+STEP 3: Buka di browser
+
+  http://localhost:8000
+  
+  Jika halaman loading tapi blank, kemungkinan:
+  - Database error (solusi #1 atau #2)
+  - Session error (solusi #6)
+  - Vite not compiled (npm run dev)
+
+================================================================================
+                        SOLUSI #8: ENV & KEY
+================================================================================
+
+CEK .env FILE:
+
+STEP 1: Edit .env
+
+  File: C:\WarnetPro\WarnetPro\.env
+
+STEP 2: Cek config penting:
+
+  APP_NAME=WarnetPro
+  APP_ENV=local
+  APP_DEBUG=true
+  APP_URL=http://localhost:8000
+  
+  APP_KEY=base64:xxxxxx... ← Harus ada!
+  
+  DB_CONNECTION=sqlite
+  DB_DATABASE=database/database.sqlite
+
+STEP 3: Jika APP_KEY kosong, generate:
+
+  php artisan key:generate
+
+STEP 4: Jika DB_DATABASE path salah, perbaiki:
+
+  Pastikan file ada: database/database.sqlite
+
+STEP 5: Clear cache
+
+  php artisan config:clear
+
+================================================================================
+                        CHECKLITS QUICK FIXES
+================================================================================
+
+Lakukan satu per satu:
+
+☐ 1. Jalankan: php artisan migrate:fresh --seed
+☐ 2. Jalankan: php artisan cache:clear
+☐ 3. Jalankan: php artisan config:clear
+☐ 4. Close browser sepenuhnya (Ctrl+W all tabs)
+☐ 5. Clear browser cache (Ctrl+Shift+Delete)
+☐ 6. Buka browser baru
+☐ 7. Go to: http://localhost:8000/login
+☐ 8. Login:
+     Email: admin@warnet.com
+     Password: password
+
+Jika MASIH tidak bisa, lanjut ke troubleshooting lebih detail.
+
+================================================================================
+                        ADVANCED TROUBLESHOOTING
+================================================================================
+
+JIKA MASIH ERROR, CEK LOG:
+
+STEP 1: Buka file log
+
+  File: C:\WarnetPro\WarnetPro\storage\logs\laravel.log
+  
+  Buka dengan Notepad atau VS Code
+
+STEP 2: Scroll ke bawah (log terbaru)
+
+  Cari error message
+
+STEP 3: Common errors:
+
+  Error: "SQLSTATE HY000: General error"
+    → Database corrupted, jalankan: php artisan migrate:fresh --seed
+
+  Error: "Class not found"
+    → Jalankan: composer dump-autoload
+
+  Error: "Trying to get property of non-object"
+    → User tidak ada, buat dengan SOLUSI #2
+
+  Error: "Undefined variable $user"
+    → Cache issue, jalankan: php artisan cache:clear
+
+STEP 4: Jika masih stuck
+
+  → Baca full error message di log
+  → Search error di Google
+  → Ask AI dengan copy-paste error message
+
+================================================================================
+                        VIDEO STEPS (RINGKAS)
+================================================================================
+
+FASTEST SOLUTION (3 MENIT):
+
+1. Command Prompt:
+   cd C:\WarnetPro\WarnetPro
+
+2. Jalankan:
+   php artisan migrate:fresh --seed
+
+3. Jalankan:
+   php artisan cache:clear && php artisan config:clear
+
+4. Close all browser
+
+5. Buka: http://localhost:8000/login
+
+6. Login:
+   admin@warnet.com / password
+
+DONE! ✅
+
+================================================================================
+                        PREVENTIVE MEASURES
+================================================================================
+
+UNTUK KEDEPANNYA HINDARI ERROR INI:
+
+✓ SEBELUM LOGIN PERTAMA KALI:
+  1. Jalankan migration: php artisan migrate
+  2. Jalankan seeder: php artisan db:seed
+  3. Clear cache: php artisan cache:clear
+
+✓ JIKA PINDAH SERVER ATAU DATABASE:
+  - Update .env DB_DATABASE path
+  - Jalankan migration ulang
+  - Run seeder ulang
+
+✓ JIKA ERROR ANEH TERJADI:
+  1. Clear cache & config
+  2. Restart server
+  3. Close & open browser baru
+  4. Cek log file
+
+✓ BACKUP DATABASE:
+  - Copy file: database/database.sqlite
+  - Simpan di lokasi aman
+  - Jika database corrupt, restore dari backup
+
+================================================================================
+                        CONTACT SUPPORT
+================================================================================
+
+Jika MASIH tidak berhasil setelah semua solusi:
+
+1. Share error message dari storage/logs/laravel.log
+2. Share output dari: php artisan tinker → App\Models\User::all();
+3. Konfirmasi: sudah jalankan migration & seeder?
+4. Konfirmasi: database file ada? (database/database.sqlite)
+
+Dengan info ini, bisa di-debug lebih lanjut!
+
+================================================================================

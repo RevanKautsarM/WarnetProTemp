@@ -1,0 +1,548 @@
+================================================================================
+                    CARA MENYALAKAN WARNETPRO SERVER & CLIENT
+================================================================================
+
+PANDUAN LENGKAP STARTUP KEDUA APLIKASI
+
+================================================================================
+                        WARNETPRO SERVER STARTUP
+================================================================================
+
+PERSYARATAN SEBELUM STARTUP:
+✓ PHP 8.2+ sudah install
+✓ Composer sudah install
+✓ Node.js & npm sudah install
+✓ Database (SQLite atau MySQL) siap
+✓ Folder WarnetPro sudah ada di C:\WarnetPro\WarnetPro
+
+================================================================================
+                    CARA 1: STARTUP OTOMATIS (RECOMMENDED)
+================================================================================
+
+STEP 1: Buka Command Prompt (cmd)
+  - Tekan: Windows Key + R
+  - Ketik: cmd
+  - Tekan: Enter
+
+STEP 2: Navigasi ke folder WarnetPro
+  Ketik perintah:
+  cd C:\WarnetPro\WarnetPro
+
+  (Sesuaikan path dengan lokasi folder WarnetPro Anda)
+
+STEP 3: Jalankan script setup awal (HANYA PERTAMA KALI)
+  
+  Jika ini pertama kali setup:
+  composer run setup
+  
+  Command ini otomatis:
+  ✓ Install semua composer dependencies (Laravel, libraries, dll)
+  ✓ Copy .env.example ke .env
+  ✓ Generate APP_KEY
+  ✓ Jalankan database migration
+  ✓ Install npm packages
+  ✓ Build Tailwind CSS dan Vite
+  
+  Tunggu hingga selesai (bisa 5-10 menit untuk pertama kali)
+
+STEP 4: Link storage untuk screenshot (HANYA PERTAMA KALI atau setelah install)
+  
+  php artisan storage:link
+  
+  Output:
+  INFO  The [public/storage] directory has been linked.
+  
+  Ini penting agar screenshot dari client bisa diakses!
+
+STEP 5: Jalankan development server
+  
+  composer run dev
+  
+  Output akan terlihat seperti:
+  
+  ┌────────────────────────────────────────┐
+  │    WarnetPro Server Running            │
+  ├────────────────────────────────────────┤
+  │ [server]      running on port 8000     │
+  │ [queue]       listening...             │
+  │ [logs]        streaming...             │
+  │ [vite]        assets compiled          │
+  └────────────────────────────────────────┘
+  
+  Ini berarti server SUDAH BERJALAN! ✅
+
+STEP 6: Akses dashboard di browser
+  
+  Buka browser (Chrome, Firefox, Edge, dll)
+  Ketik: http://localhost:8000
+  
+  Atau jika akses dari PC lain (gunakan IP server):
+  http://192.168.1.100:8000
+  
+  (Ganti 192.168.1.100 dengan IP komputer server Anda)
+
+================================================================================
+                    CARA 2: STARTUP MANUAL (DEVELOPMENT)
+================================================================================
+
+Jika Anda ingin menjalankan komponen secara terpisah untuk debugging:
+
+TERMINAL 1 - Jalankan Laravel Server:
+  cd C:\WarnetPro\WarnetPro
+  php artisan serve
+  
+  Output:
+  INFO  Server running on [http://127.0.0.1:8000]
+
+TERMINAL 2 - Jalankan Queue Listener:
+  cd C:\WarnetPro\WarnetPro
+  php artisan queue:listen --tries=1 --timeout=0
+
+TERMINAL 3 - Jalankan Vite Dev Server (untuk asset hot-reload):
+  cd C:\WarnetPro\WarnetPro
+  npm run dev
+
+TERMINAL 4 - (Optional) Monitor logs real-time:
+  cd C:\WarnetPro\WarnetPro
+  php artisan pail
+
+Buka ke terminal 1, browser akan otomatis open atau manual buka:
+http://localhost:8000
+
+================================================================================
+                    CARA 3: PRODUCTION MODE
+================================================================================
+
+Untuk production (live server):
+
+STEP 1: Build frontend assets
+  npm run build
+
+STEP 2: Set environment ke production
+  Edit .env:
+  APP_ENV=production
+  APP_DEBUG=false
+
+STEP 3: Optimize untuk production
+  php artisan config:cache
+  php artisan route:cache
+  php artisan view:cache
+
+STEP 4: Jalankan server dengan web server (Apache/Nginx)
+  Konfigurasi web server untuk point ke folder /public
+
+STEP 5: Setup supervisor untuk queue (Linux/Production)
+  Konfigurasi supervisor untuk menjalankan:
+  php artisan queue:work
+
+================================================================================
+                    CARA 4: BACKGROUND SERVICE (Windows)
+================================================================================
+
+Untuk menjalankan server sebagai Windows Service:
+
+STEP 1: Install NSSM (Non-Sucking Service Manager)
+  Download dari: https://nssm.cc/download/
+  Extract ke: C:\nssm-2.24-101-g897c7ad
+
+STEP 2: Buka Command Prompt sebagai Administrator
+  
+STEP 3: Buat service baru
+  cd C:\nssm-2.24-101-g897c7ad\win64
+  nssm install WarnetProServer "C:\PHP\php.exe" "C:\WarnetPro\WarnetPro\artisan" serve
+  
+  (Sesuaikan path PHP dan WarnetPro)
+
+STEP 4: Mulai service
+  nssm start WarnetProServer
+
+STEP 5: Cek status
+  nssm status WarnetProServer
+
+STOP service:
+  nssm stop WarnetProServer
+
+================================================================================
+                      WARNETPRO CLIENT STARTUP
+================================================================================
+
+PERSYARATAN SEBELUM STARTUP:
+✓ Python 3.7+ sudah install dan PATH sudah set
+✓ File config.ini sudah dibuat dan dikonfigurasi
+✓ Server WarnetPro sudah berjalan
+✓ Internet connection ke server (same network atau VPN)
+✓ Folder WarnetProClient sudah ada
+
+================================================================================
+                    CARA 1: STARTUP OTOMATIS (MUDAH)
+================================================================================
+
+Cara PALING MUDAH - Double-click file start.bat:
+
+STEP 1: Navigasi ke folder WarnetProClient
+  C:\WarnetPro\WarnetProClient
+
+STEP 2: Double-click file start.bat
+  
+  File ini otomatis:
+  ✓ Cek Python terinstall
+  ✓ Install dependencies dari requirements.txt
+  ✓ Jalankan aplikasi warnetpro_client_gui.py
+  
+  Window akan muncul:
+  ┌──────────────────────────────────────┐
+  │  WarnetPro Client GUI v2.0           │
+  │                                      │
+  │  PC Name: PC-01      Status: ONLINE  │
+  │                                      │
+  │  [Login] [Logout] [Lock] [Unlock]   │
+  │                                      │
+  │  Connecting to server...             │
+  │  ✓ Connected                         │
+  │  ✓ PC Registered                     │
+  └──────────────────────────────────────┘
+
+STEP 3: Aplikasi sudah siap! ✅
+  - Berjalan di background (system tray)
+  - Mengirim heartbeat ke server
+  - Ready menerima perintah dari operator
+
+================================================================================
+                    CARA 2: STARTUP MANUAL
+================================================================================
+
+Menggunakan Command Prompt:
+
+STEP 1: Buka Command Prompt (cmd)
+  - Tekan: Windows Key + R
+  - Ketik: cmd
+  - Tekan: Enter
+
+STEP 2: Navigasi ke folder client
+  cd C:\WarnetPro\WarnetProClient
+
+STEP 3: Install dependencies (jika belum)
+  pip install -r requirements.txt
+  
+  Pastikan output:
+  ✓ Successfully installed requests
+  ✓ Successfully installed Pillow
+  ✓ Successfully installed pystray
+
+STEP 4: Jalankan aplikasi
+  python warnetpro_client_gui.py
+  
+  Output akan terlihat:
+  
+  [2024-01-15 10:30:45] WarnetPro Client Starting...
+  [2024-01-15 10:30:46] Loading config.ini...
+  [2024-01-15 10:30:47] PC Name: PC-01
+  [2024-01-15 10:30:48] Connecting to server: http://192.168.1.100:8000
+  [2024-01-15 10:30:49] ✓ Connected to server
+  [2024-01-15 10:30:50] ✓ Heartbeat sent successfully
+  [2024-01-15 10:30:50] GUI Window opened
+  
+  Aplikasi siap! ✅
+
+STEP 5: (Optional) Buka browser untuk verifikasi
+  Jika aplikasi di-run di PC yang sama dengan server:
+  http://localhost:8000
+  
+  Lihat di Dashboard → PC List, harusnya PC-01 terlihat ONLINE
+
+================================================================================
+                    CARA 3: AUTO-START SAAT WINDOWS BOOT
+================================================================================
+
+Setup client untuk auto-run saat Windows startup:
+
+STEP 1: Buat shortcut dari start.bat
+  - Klik kanan start.bat
+  - Pilih: Send to → Desktop (create shortcut)
+  - Shortcut akan dibuat di Desktop
+
+STEP 2: Buka Windows Startup Folder
+  - Tekan: Windows Key + R
+  - Ketik: shell:startup
+  - Tekan: Enter
+  
+  Folder Startup akan terbuka:
+  C:\Users\[YourUsername]\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+
+STEP 3: Pindahkan shortcut ke Startup folder
+  - Klik & drag shortcut dari Desktop ke Startup folder
+  - Atau copy-paste shortcut ke folder tersebut
+
+STEP 4: Test
+  - Restart komputer
+  - Aplikasi akan otomatis jalan saat Windows boot ✅
+  - Cek system tray, harusnya ada WarnetPro icon
+
+ALTERNATIVE menggunakan Task Scheduler:
+
+  1. Tekan: Windows Key + R
+  2. Ketik: taskschd.msc
+  3. Klik: Create Basic Task
+  4. Name: WarnetPro Client
+  5. Trigger: "At log on"
+  6. Action: Start a program
+  7. Program: C:\WarnetPro\WarnetProClient\start.bat
+  8. Finish
+
+================================================================================
+                    CARA 4: JALANKAN DENGAN COMMAND LINE ADVANCED
+================================================================================
+
+Untuk developer atau troubleshooting:
+
+JALANKAN DENGAN DEBUG MODE:
+  python -u warnetpro_client_gui.py
+  
+  Flag -u = unbuffered (print langsung, tidak dicache)
+
+JALANKAN DENGAN VERBOSE OUTPUT:
+  python warnetpro_client_gui.py > client.log 2>&1
+  
+  Ini akan save semua output ke file client.log
+
+JALANKAN DENGAN PYTHON INTERACTIVE MODE:
+  python -i warnetpro_client_gui.py
+  
+  Ini membiarkan Anda debug di Python console setelah app jalan
+
+JALANKAN DENGAN TIMER:
+  @echo off
+  echo Starting WarnetPro Client in 5 seconds...
+  timeout /t 5
+  python warnetpro_client_gui.py
+  pause
+
+================================================================================
+                        KONFIGURASI config.ini
+================================================================================
+
+SEBELUM STARTUP CLIENT, PASTIKAN config.ini SUDAH BENAR:
+
+Template config.ini:
+
+[server]
+url = http://192.168.1.100:8000     ; ← IP server yang benar!
+pc_name = PC-01                     ; ← Nama PC unik
+timeout = 10
+
+[client]
+heartbeat_interval = 5
+status_poll_interval = 3
+command_poll_interval = 2
+screenshot_quality = 60
+debug_mode = false
+
+CARA CARI IP SERVER:
+
+1. Di server, buka Command Prompt:
+   ipconfig
+   
+   Cari baris "IPv4 Address"
+   Contoh: 192.168.1.100
+
+2. Copy IP tersebut ke config.ini client:
+   url = http://192.168.1.100:8000
+
+3. Test koneksi dari client PC:
+   ping 192.168.1.100
+   
+   Jika berhasil → bisa pakai di config.ini
+   Jika gagal → PC tidak bisa akses server
+
+================================================================================
+                      STARTUP TROUBLESHOOTING
+================================================================================
+
+SERVER TIDAK BISA STARTUP:
+
+Error 1: "Port 8000 already in use"
+SOLUSI:
+  tasklist | findstr php
+  taskkill /PID [process_id] /F
+  Atau ubah port di config: php artisan serve --port=8001
+
+Error 2: "Class not found" atau "Fatal error"
+SOLUSI:
+  php artisan cache:clear
+  php artisan config:clear
+  composer dump-autoload
+  composer run setup
+
+Error 3: "SQLSTATE error"
+SOLUSI:
+  php artisan migrate:refresh
+  php artisan db:seed
+
+Error 4: "Permission denied" di /storage
+SOLUSI:
+  Dari command prompt as Administrator:
+  icacls "C:\WarnetPro\WarnetPro\storage" /grant:r %username%:F
+
+================================================================================
+
+CLIENT TIDAK BISA STARTUP:
+
+Error 1: "ModuleNotFoundError: No module named 'requests'"
+SOLUSI:
+  pip install requests Pillow pystray
+  Atau jalankan start.bat
+
+Error 2: "Connection refused" saat connect ke server
+SOLUSI:
+  ✓ Pastikan server running
+  ✓ Cek IP di config.ini benar
+  ✓ Ping server dari client PC
+  ✓ Cek firewall allow port 8000
+
+Error 3: "PC name not found" di server
+SOLUSI:
+  Pastikan config.ini pc_name sesuai dengan registrasi di server
+  Register manual PC melalui dashboard
+
+Error 4: "TypeError" atau "No module pystray"
+SOLUSI:
+  pip install --upgrade pystray
+  Atau jalankan: python -m pip install -r requirements.txt --force-reinstall
+
+================================================================================
+                      STATUS MONITOR CHECKLIST
+================================================================================
+
+SETELAH STARTUP, VERIFIKASI DENGAN CHECKLIST:
+
+SERVER CHECKLIST:
+☑ Command Prompt menunjukkan "Server running on [http://127.0.0.1:8000]"
+☑ Queue listening running
+☑ Vite assets compiled
+☑ Browser bisa akses http://localhost:8000
+☑ Dashboard login page muncul
+☑ Database sudah termigrasi (php artisan tinker → PC::count())
+
+CLIENT CHECKLIST:
+☑ Application window terbuka
+☑ Status menunjukkan "ONLINE" (hijau)
+☑ Heartbeat log terlihat di console ("Heartbeat sent")
+☑ System tray icon ada di taskbar
+☑ Di server dashboard, PC list menunjukkan "PC-01 ONLINE"
+☑ Timer countdown tampil (jika ada session aktif)
+
+KOMUNIKASI CHECKLIST:
+☑ Server menerima heartbeat dari client (cek database: Heartbeat::latest())
+☑ Operator bisa lihat PC di dashboard
+☑ Operator bisa klik "Lock" dan PC client langsung lock
+☑ Operator bisa capture screenshot dari dashboard
+☑ Client bisa polling command dengan status OK
+
+================================================================================
+                      QUICK START SUMMARY
+================================================================================
+
+QUICK START SERVER (3 LANGKAH):
+1. cd C:\WarnetPro\WarnetPro
+2. composer run setup          (pertama kali saja)
+3. composer run dev           ← SERVER JALAN!
+
+QUICK START CLIENT (1 LANGKAH):
+1. Double-click start.bat     ← CLIENT JALAN!
+
+AKSES:
+- Server Dashboard: http://localhost:8000
+- Client GUI: System tray (PC-01)
+- Client Process: Task Manager → warnetpro_client_gui.py
+
+================================================================================
+                      ADVANCED: DOCKER DEPLOYMENT
+================================================================================
+
+UNTUK PRODUCTION, GUNAKAN DOCKER:
+
+Dockerfile sudah tersedia di folder WarnetPro
+
+BUILD IMAGE:
+  docker build -t warnetpro:latest .
+
+RUN CONTAINER:
+  docker run -d \
+    -p 8000:8000 \
+    -v /path/to/storage:/app/storage \
+    -v /path/to/database:/app/database \
+    --name warnetpro \
+    warnetpro:latest
+
+MONITOR:
+  docker ps
+  docker logs -f warnetpro
+
+STOP:
+  docker stop warnetpro
+  docker rm warnetpro
+
+================================================================================
+                      TIPS & BEST PRACTICES
+================================================================================
+
+✓ Selalu jalankan `php artisan storage:link` setelah fresh install
+✓ Set timezone server di .env: APP_TIMEZONE=Asia/Jakarta
+✓ Backup database secara berkala
+✓ Monitor server resources (CPU, RAM) saat banyak client connect
+✓ Jalankan client saat Windows startup (auto-launch)
+✓ Update config.ini jika IP server berubah
+✓ Keep dependencies updated: composer update, npm update
+✓ Enable debug mode hanya saat development, disable di production
+✓ Test koneksi client-server sebelum go-live
+✓ Monitor logs untuk detect issues early
+
+================================================================================
+                      TROUBLESHOOTING FLOW
+================================================================================
+
+APLIKASI TIDAK JALAN?
+
+┌─ Server tidak jalan?
+│  ├─ Cek folder path benar
+│  ├─ Cek PHP terinstall: php -v
+│  ├─ Cek Composer: composer -v
+│  └─ Cek database writable
+│
+├─ Client tidak connect ke server?
+│  ├─ Cek config.ini IP server benar
+│  ├─ Cek server sudah running
+│  ├─ Ping server dari client
+│  └─ Cek firewall port 8000
+│
+├─ Screenshot tidak muncul?
+│  ├─ Run: php artisan storage:link
+│  ├─ Cek /storage/app/screenshots ada
+│  └─ Restart server
+│
+└─ PC tidak terdeteksi?
+   ├─ Cek config.ini pc_name
+   ├─ Register ulang di dashboard
+   └─ Restart client aplikasi
+
+================================================================================
+                      CONTACT & SUPPORT
+================================================================================
+
+Jika mengalami masalah:
+
+1. Check documentation di WARNETPRO_SERVER.txt
+2. Check documentation di WARNETPRO_CLIENT.txt
+3. Check error logs (server dan client)
+4. Test koneksi dengan ping
+5. Clear cache: php artisan cache:clear
+6. Restart aplikasi
+7. Contact system administrator
+
+Log Files Location:
+- Server: C:\WarnetPro\WarnetPro\storage\logs\
+- Client: C:\WarnetPro\WarnetProClient\client.log
+
+================================================================================
+                             END OF GUIDE
+================================================================================

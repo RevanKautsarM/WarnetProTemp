@@ -1,0 +1,94 @@
+# WarnetPro Client — Task Status Audit
+
+> [!NOTE]
+> Audited on 2026-05-29 by checking every file in the codebase and verifying migration status.
+
+---
+
+## Phase 1: Migrations + Models ✅ COMPLETE
+
+- [x] Create `members` table migration — [2026_05_14_042612_create_members_table.php](file:///c:/Users/Hype%20GLK/WarnetPro/database/migrations/2026_05_14_042612_create_members_table.php)
+- [x] Create `pc_commands` table migration — [2026_05_14_042651_create_pc_commands_table.php](file:///c:/Users/Hype%20GLK/WarnetPro/database/migrations/2026_05_14_042651_create_pc_commands_table.php)
+- [x] Add heartbeat columns to `computers` migration — [2026_05_14_042710_add_heartbeat_to_computers_table.php](file:///c:/Users/Hype%20GLK/WarnetPro/database/migrations/2026_05_14_042710_add_heartbeat_to_computers_table.php)
+- [x] Add `member_id` to `play_sessions` migration — [2026_05_14_042730_add_member_to_play_sessions_table.php](file:///c:/Users/Hype%20GLK/WarnetPro/database/migrations/2026_05_14_042730_add_member_to_play_sessions_table.php)
+- [x] Make `customer_name` nullable in `play_sessions` — Included in `add_member_to_play_sessions_table` migration (line 15: `$table->string('customer_name')->nullable()->change()`)
+- [x] Create `Member` model — [Member.php](file:///c:/Users/Hype%20GLK/WarnetPro/app/Models/Member.php)
+- [x] Create `PcCommand` model — [PcCommand.php](file:///c:/Users/Hype%20GLK/WarnetPro/app/Models/PcCommand.php)
+- [x] Update `Computer` model (heartbeat, commands, isOnline) — [Computer.php](file:///c:/Users/Hype%20GLK/WarnetPro/app/Models/Computer.php) — Has `commands()`, `pendingCommands()`, `isOnline()`, heartbeat casting
+- [x] Update `PlaySession` model (member relation) — [PlaySession.php](file:///c:/Users/Hype%20GLK/WarnetPro/app/Models/PlaySession.php) — Has `member()` relation, `display_name` accessor, `member_id` in fillable
+- [x] Run migrations — All 10 migrations ran successfully (Batch 1 & 2)
+
+---
+
+## Phase 2: Client API ✅ COMPLETE
+
+- [x] Create `routes/api.php` — [api.php](file:///c:/Users/Hype%20GLK/WarnetPro/routes/api.php) — Routes: heartbeat, status, member-login/logout, offline, commands, ack
+- [x] Create `ClientApiController` — [ClientApiController.php](file:///c:/Users/Hype%20GLK/WarnetPro/app/Http/Controllers/Api/ClientApiController.php) — 302 lines, all endpoints implemented (heartbeat, status, memberLogin, memberLogout, offline, getCommands, acknowledgeCommand)
+- [x] Register API routes in bootstrap — [app.php](file:///c:/Users/Hype%20GLK/WarnetPro/bootstrap/app.php) — `api: __DIR__.'/../routes/api.php'` registered
+
+---
+
+## Phase 3: Member Management UI ✅ COMPLETE
+
+- [x] Create `MemberController` (index, create, store, show, addTime) — [MemberController.php](file:///c:/Users/Hype%20GLK/WarnetPro/app/Http/Controllers/MemberController.php) — Full CRUD + addTime, resetPassword, toggleStatus
+- [x] Create `members/index.blade.php` — [index.blade.php](file:///c:/Users/Hype%20GLK/WarnetPro/resources/views/members/index.blade.php)
+- [x] Create `members/create.blade.php` — [create.blade.php](file:///c:/Users/Hype%20GLK/WarnetPro/resources/views/members/create.blade.php)
+- [x] Create `members/show.blade.php` — [show.blade.php](file:///c:/Users/Hype%20GLK/WarnetPro/resources/views/members/show.blade.php)
+
+---
+
+## Phase 4: Server Updates ⚠️ MOSTLY COMPLETE
+
+- [x] Update `ComputerController` (shutdown, restart) — [ComputerController.php](file:///c:/Users/Hype%20GLK/WarnetPro/app/Http/Controllers/ComputerController.php) — `shutdown()` and `restart()` methods implemented
+- [x] Update `PlaySessionController` (guest = no name, just PC + duration) — [PlaySessionController.php](file:///c:/Users/Hype%20GLK/WarnetPro/app/Http/Controllers/PlaySessionController.php) — `store()` sets `customer_name => null`, no name field in validation
+- [x] Update `web.php` routes — [web.php](file:///c:/Users/Hype%20GLK/WarnetPro/routes/web.php) — Members resource, shutdown/restart routes, API polling routes all registered
+- [x] Update session create view (simplified guest form) — [create.blade.php](file:///c:/Users/Hype%20GLK/WarnetPro/resources/views/sessions/create.blade.php) — Only PC + duration, no customer name field
+- [x] Update `dashboard.blade.php` (shutdown/restart buttons, online dot) — [dashboard.blade.php](file:///c:/Users/Hype%20GLK/WarnetPro/resources/views/dashboard.blade.php) — Has shutdown/restart buttons on hover (line 138-154), green online dot (line 106-108)
+- [ ] **Update `DashboardController` (member stats, online indicator)** — [DashboardController.php](file:///c:/Users/Hype%20GLK/WarnetPro/app/Http/Controllers/DashboardController.php) — ❌ **No member stats** (no `Member::count()`, no member-related data passed to view)
+- [ ] **Update `dashboard.blade.php` (member stats)** — ❌ **No member stats card/section** in the dashboard view
+
+> [!WARNING]
+> The `DashboardController` does not pass any member statistics (total members, active members, etc.) to the dashboard view. The dashboard view also has no UI section showing member stats.
+
+---
+
+## Phase 5: Python Client ⚠️ PARTIALLY COMPLETE
+
+- [x] Create `client/config.ini` — [config.ini](file:///c:/Users/Hype%20GLK/WarnetPro/client/config.ini) — Server URL, PC name, intervals configured
+- [x] Create `client/requirements.txt` — [requirements.txt](file:///c:/Users/Hype%20GLK/WarnetPro/client/requirements.txt) — Contains `requests`
+- [ ] **Create `client/warnetpro_client.py`** — ❌ **File does not exist** — This is the main Python client script
+- [ ] **Create `client/README.md`** — ❌ **File does not exist** — Documentation for the client
+
+> [!CAUTION]
+> The two most critical files of the Python client are missing: the main script (`warnetpro_client.py`) and the documentation (`README.md`). The `client/sounds/` directory exists but the main program isn't there.
+
+---
+
+## Phase 6: Testing ❌ NOT STARTED
+
+- [ ] Test heartbeat + online status
+- [ ] Test guest session (operator → PC only + duration)
+- [ ] Test member create + add time
+- [ ] Test member login/logout on client
+- [ ] Test sound alerts
+- [ ] Test shutdown/restart commands
+
+---
+
+## Summary
+
+| Phase | Status | Completion |
+|-------|--------|------------|
+| Phase 1: Migrations + Models | ✅ Complete | 10/10 |
+| Phase 2: Client API | ✅ Complete | 3/3 |
+| Phase 3: Member Management UI | ✅ Complete | 4/4 |
+| Phase 4: Server Updates | ⚠️ Mostly done | 5/7 |
+| Phase 5: Python Client | ⚠️ Partial | 2/4 |
+| Phase 6: Testing | ❌ Not started | 0/6 |
+| **TOTAL** | | **24/34** |
+
+### Remaining Work (10 items)
+1. Add member stats to `DashboardController` & `dashboard.blade.php`
+2. Create `client/warnetpro_client.py` (main Python client)
+3. Create `client/README.md` (client documentation)
+4. All 6 testing tasks
