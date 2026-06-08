@@ -1,9 +1,9 @@
 @echo off
-title WarnetPro Server (Operator)
+title WarnetPro Operator Dashboard (Lokal)
 cd /d "%~dp0"
 
 echo ============================================================
-echo   WarnetPro Server - Operator Dashboard
+echo   WarnetPro Operator Dashboard - Mode Lokal Mandiri
 echo   Memeriksa Python...
 echo ============================================================
 echo.
@@ -16,14 +16,13 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [INFO] Menjalankan server...
-echo [INFO] Untuk auto-firewall, jalankan sebagai Administrator.
+echo [INFO] Menjalankan dashboard operator lokal...
 echo.
 
 python operator_gui.py
 
 if errorlevel 1 (
     echo.
-    echo [ERROR] Server berhenti dengan error.
+    echo [ERROR] Dashboard berhenti dengan error.
     pause
 )
